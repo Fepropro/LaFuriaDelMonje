@@ -470,7 +470,7 @@ function createMonje(x, y, z) {
   const textureLoader = new THREE.TextureLoader()
 
   const texture =
-    textureLoader.load('/monje.png')
+    textureLoader.load('monje.png')
 
   const material =
     new THREE.SpriteMaterial({
