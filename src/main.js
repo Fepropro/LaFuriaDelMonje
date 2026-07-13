@@ -215,6 +215,8 @@ if (isMobile) {
 
     mode: 'static',
 
+    multitouch: true,
+
     position: {
       left: '80px',
       bottom: '80px'
@@ -249,32 +251,39 @@ if (isMobile) {
 
 if (isMobile) {
 
-  document.addEventListener(
+  const lookZone =
+    document.createElement('div')
+
+  lookZone.style.position = 'fixed'
+  lookZone.style.right = '0'
+  lookZone.style.top = '0'
+  lookZone.style.width = '50%'
+  lookZone.style.height = '100%'
+  lookZone.style.zIndex = '1000'
+
+  document.body.appendChild(
+    lookZone
+  )
+
+  lookZone.addEventListener(
     'touchstart',
     (event) => {
 
       const touch =
         event.touches[0]
 
-      if (
-        touch.clientX >
-        window.innerWidth / 2
-      ) {
+      touchLook = true
 
-        touchLook = true
+      lastTouchX =
+        touch.clientX
 
-        lastTouchX =
-          touch.clientX
-        
-        lastTouchY =
-          touch.clientY
-
-      }
+      lastTouchY =
+        touch.clientY
 
     }
   )
 
-  document.addEventListener(
+  lookZone.addEventListener(
     'touchmove',
     (event) => {
 
@@ -310,7 +319,7 @@ if (isMobile) {
     }
   )
 
-  document.addEventListener(
+  lookZone.addEventListener(
     'touchend',
     () => {
 
