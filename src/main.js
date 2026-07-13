@@ -1,6 +1,7 @@
 import './style.css'
 import * as THREE from 'three'
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js'
+import nipplejs from 'nipplejs'
 
 const scene = new THREE.Scene()
 scene.background = new THREE.Color(0x111111)
@@ -56,7 +57,10 @@ playButton.onclick = () => {
 
   menuScreen.style.display = 'none'
 
-  controls.lock()
+  if (!isMobile) {
+
+    controls.lock()
+  }
 
 }
 
@@ -146,6 +150,12 @@ menuButton.onclick = () => {
 
 gameOverScreen.appendChild(menuButton)
 
+let joystickForward = 0
+let joystickSide = 0
+
+const isMobile =
+  window.innerWidth < 900
+
 const colliders = []
 
 let gameStarted = false
@@ -166,6 +176,16 @@ let exitDoor
 
 let monjeSpeed = 0.02
 
+let touchLook = false
+
+let lastTouchX = 0
+
+let lastTouchY = 0
+
+let yaw = 0
+
+let pitch = 0
+
 document.addEventListener('keydown', (event) => {
   keys[event.code] = true
 })
@@ -173,6 +193,133 @@ document.addEventListener('keydown', (event) => {
 document.addEventListener('keyup', (event) => {
   keys[event.code] = false
 })
+
+if (isMobile) {
+
+  const joystickZone =
+    document.createElement('div')
+
+  joystickZone.style.position = 'fixed'
+  joystickZone.style.left = '0'
+  joystickZone.style.bottom = '0'
+  joystickZone.style.width = '200px'
+  joystickZone.style.height = '200px'
+
+  document.body.appendChild(
+    joystickZone
+  )
+
+  const joystick = nipplejs.create({
+
+    zone: joystickZone,
+
+    mode: 'static',
+
+    position: {
+      left: '80px',
+      bottom: '80px'
+    },
+
+    color: 'white'
+
+  })
+
+  joystick.on('move', (...args) => {
+
+    const data = args[0].data
+
+    if (!data || !data.vector) return
+
+    joystickForward =
+      data.vector.y
+
+    joystickSide =
+      data.vector.x
+
+  })
+
+  joystick.on('end', () => {
+
+    joystickForward = 0
+    joystickSide = 0
+
+  })
+
+}
+
+if (isMobile) {
+
+  document.addEventListener(
+    'touchstart',
+    (event) => {
+
+      const touch =
+        event.touches[0]
+
+      if (
+        touch.clientX >
+        window.innerWidth / 2
+      ) {
+
+        touchLook = true
+
+        lastTouchX =
+          touch.clientX
+        
+        lastTouchY =
+          touch.clientY
+
+      }
+
+    }
+  )
+
+  document.addEventListener(
+    'touchmove',
+    (event) => {
+
+      if (!touchLook) return
+
+      const touch =
+        event.touches[0]
+
+      const deltaX =
+        touch.clientX - lastTouchX
+
+      const deltaY =
+        touch.clientY - lastTouchY
+
+      yaw -= deltaX * 0.005
+
+      pitch -= deltaY * 0.005
+
+      pitch = Math.max(
+        -Math.PI / 2,
+        Math.min(
+          Math.PI / 2,
+          pitch
+        )
+      )
+
+      lastTouchX =
+        touch.clientX
+
+      lastTouchY =
+        touch.clientY
+
+    }
+  )
+
+  document.addEventListener(
+    'touchend',
+    () => {
+
+      touchLook = false
+
+    }
+  )
+
+}
 
 // Piso
 
@@ -544,6 +691,14 @@ function updatePlayer() {
   if (keys['KeyA']) moveX -= speed
   if (keys['KeyD']) moveX += speed
 
+  if (isMobile) {
+
+    moveZ += -joystickForward * speed
+
+    moveX += joystickSide * speed
+
+  }
+
   const direction = new THREE.Vector3()
 
   camera.getWorldDirection(direction)
@@ -728,6 +883,16 @@ function animate() {
   checkVictory()
 
   updateMonje()
+
+  if (isMobile) {
+
+    camera.rotation.order = 'YXZ'
+
+    camera.rotation.y = yaw
+
+    camera.rotation.x = pitch
+
+  }
 
   renderer.render(scene, camera)
 
